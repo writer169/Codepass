@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import PasswordGenerator from './components/PasswordGenerator';
 
-// In a real Vercel environment, this would come from process.env.ACCESS_KEY
-// For this client-side simulation, we'll hardcode it.
-const SECRET_ACCESS_KEY = 'SECRET_KEY_123';
+// Access key from environment variable (set in Vercel)
+const SECRET_ACCESS_KEY = import.meta.env.VITE_ACCESS_KEY || '';
 
 const App: React.FC = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -13,9 +11,16 @@ const App: React.FC = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const accessKey = urlParams.get('access_key');
-    if (accessKey === SECRET_ACCESS_KEY) {
+    
+    if (accessKey && SECRET_ACCESS_KEY && accessKey === SECRET_ACCESS_KEY) {
+      setIsAuthorized(true);
+      // Save authorization in sessionStorage
+      sessionStorage.setItem('authorized', 'true');
+    } else if (sessionStorage.getItem('authorized') === 'true') {
+      // Keep authorized during session
       setIsAuthorized(true);
     }
+    
     setIsLoading(false);
   }, []);
 

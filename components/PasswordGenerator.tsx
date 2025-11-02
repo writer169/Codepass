@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { LOWERCASE_CHARS, UPPERCASE_CHARS, NUMBERS_CHARS, SYMBOLS_CHARS } from '../constants';
 import { CheckIcon, CopyIcon, ShieldCheckIcon } from './Icons';
@@ -13,6 +12,7 @@ interface CheckboxOption {
 const PasswordGenerator: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [passwordLength, setPasswordLength] = useState<number>(16);
+  const [lengthInput, setLengthInput] = useState<string>('16');
   const [includeUppercase, setIncludeUppercase] = useState<boolean>(true);
   const [includeLowercase, setIncludeLowercase] = useState<boolean>(true);
   const [includeNumbers, setIncludeNumbers] = useState<boolean>(true);
@@ -27,7 +27,7 @@ const PasswordGenerator: React.FC = () => {
     if (includeSymbols) characterPool += SYMBOLS_CHARS;
 
     if (characterPool === '') {
-      setPassword('Select at least one character set');
+      setPassword('Выберите хотя бы один набор символов');
       return;
     }
 
@@ -48,49 +48,87 @@ const PasswordGenerator: React.FC = () => {
   }, []);
 
   const handleCopyToClipboard = useCallback(() => {
-    if (!password || password.startsWith('Select')) return;
+    if (!password || password.startsWith('Выберите')) return;
     navigator.clipboard.writeText(password).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }, [password]);
+
+  const handleLengthInputChange = (value: string) => {
+    setLengthInput(value);
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 1 && numValue <= 128) {
+      setPasswordLength(numValue);
+    }
+  };
+
+  const handleLengthInputBlur = () => {
+    const numValue = parseInt(lengthInput, 10);
+    if (isNaN(numValue) || numValue < 1) {
+      setPasswordLength(1);
+      setLengthInput('1');
+    } else if (numValue > 128) {
+      setPasswordLength(128);
+      setLengthInput('128');
+    }
+  };
   
   const checkboxOptions: CheckboxOption[] = [
-    { id: 'uppercase', label: 'Include Uppercase Letters', checked: includeUppercase, setter: setIncludeUppercase },
-    { id: 'lowercase', label: 'Include Lowercase Letters', checked: includeLowercase, setter: setIncludeLowercase },
-    { id: 'numbers', label: 'Include Numbers', checked: includeNumbers, setter: setIncludeNumbers },
-    { id: 'symbols', label: 'Include Symbols', checked: includeSymbols, setter: setIncludeSymbols },
+    { id: 'uppercase', label: 'Заглавные буквы (A-Z)', checked: includeUppercase, setter: setIncludeUppercase },
+    { id: 'lowercase', label: 'Строчные буквы (a-z)', checked: includeLowercase, setter: setIncludeLowercase },
+    { id: 'numbers', label: 'Цифры (0-9)', checked: includeNumbers, setter: setIncludeNumbers },
+    { id: 'symbols', label: 'Символы (!@#$%)', checked: includeSymbols, setter: setIncludeSymbols },
   ];
 
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-slate-900 text-slate-100 p-4">
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Password Generator</h1>
-          <p className="text-slate-400 mt-2">Create strong and secure passwords.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Генератор паролей</h1>
+          <p className="text-slate-400 mt-2">Создавайте надежные и безопасные пароли</p>
         </div>
 
         <div className="bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 space-y-6">
           <div className="relative">
-            <input
+            <textarea
               readOnly
               value={password}
-              className="w-full bg-slate-700 text-slate-50 font-mono text-lg p-4 pr-12 rounded-md border-2 border-transparent focus:border-cyan-500 focus:ring-cyan-500 transition"
-              placeholder="Your password will appear here"
+              className="w-full bg-slate-700 text-slate-50 font-mono text-lg p-4 pr-12 rounded-md border-2 border-transparent focus:border-cyan-500 focus:ring-cyan-500 transition resize-none overflow-hidden"
+              placeholder="Ваш пароль появится здесь"
+              rows={1}
+              style={{
+                minHeight: '56px',
+                height: 'auto',
+                lineHeight: '1.5'
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = target.scrollHeight + 'px';
+              }}
             />
             <button
               onClick={handleCopyToClipboard}
-              className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-slate-400 hover:text-cyan-400 transition-colors"
-              aria-label="Copy password"
+              className="absolute top-2 right-2 flex items-center justify-center w-10 h-10 text-slate-400 hover:text-cyan-400 transition-colors rounded-md hover:bg-slate-600/50"
+              aria-label="Копировать пароль"
             >
               {copied ? <CheckIcon className="w-6 h-6 text-green-400" /> : <CopyIcon className="w-6 h-6" />}
             </button>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label htmlFor="length" className="text-slate-300">Password Length</label>
-              <span className="font-mono text-cyan-400 text-lg bg-slate-700 px-3 py-1 rounded-md">{passwordLength}</span>
+            <div className="flex items-center justify-between gap-4">
+              <label htmlFor="length" className="text-slate-300 whitespace-nowrap">Длина пароля</label>
+              <input
+                type="number"
+                min="1"
+                max="128"
+                value={lengthInput}
+                onChange={(e) => handleLengthInputChange(e.target.value)}
+                onBlur={handleLengthInputBlur}
+                className="w-20 font-mono text-cyan-400 text-lg bg-slate-700 px-3 py-1 rounded-md border-2 border-transparent focus:border-cyan-500 focus:ring-cyan-500 transition text-center"
+              />
             </div>
             <input
               type="range"
@@ -98,7 +136,11 @@ const PasswordGenerator: React.FC = () => {
               min="1"
               max="128"
               value={passwordLength}
-              onChange={(e) => setPasswordLength(parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setPasswordLength(val);
+                setLengthInput(val.toString());
+              }}
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
             />
           </div>
@@ -113,7 +155,7 @@ const PasswordGenerator: React.FC = () => {
                   onChange={(e) => option.setter(e.target.checked)}
                   className="w-5 h-5 accent-cyan-500 bg-slate-700 border-slate-600 rounded text-cyan-500 focus:ring-cyan-600"
                 />
-                <label htmlFor={option.id} className="ml-3 text-sm text-slate-300 select-none">
+                <label htmlFor={option.id} className="ml-3 text-sm text-slate-300 select-none cursor-pointer">
                   {option.label}
                 </label>
               </div>
@@ -125,7 +167,7 @@ const PasswordGenerator: React.FC = () => {
             className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-75"
           >
             <ShieldCheckIcon className="w-6 h-6" />
-            Generate Password
+            Сгенерировать пароль
           </button>
         </div>
       </div>

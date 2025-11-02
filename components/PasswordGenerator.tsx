@@ -18,6 +18,15 @@ const PasswordGenerator: React.FC = () => {
   const [includeNumbers, setIncludeNumbers] = useState<boolean>(true);
   const [includeSymbols, setIncludeSymbols] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  }, []);
 
   const generatePassword = useCallback(() => {
     let characterPool = '';
@@ -40,12 +49,17 @@ const PasswordGenerator: React.FC = () => {
     }
     setPassword(newPassword);
     setCopied(false);
-  }, [passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols]);
+    setTimeout(adjustTextareaHeight, 0);
+  }, [passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols, adjustTextareaHeight]);
 
   useEffect(() => {
     generatePassword();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [password, adjustTextareaHeight]);
 
   const handleCopyToClipboard = useCallback(() => {
     if (!password || password.startsWith('Выберите')) return;
@@ -92,20 +106,16 @@ const PasswordGenerator: React.FC = () => {
         <div className="bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 space-y-6">
           <div className="relative">
             <textarea
+              ref={textareaRef}
               readOnly
               value={password}
-              className="w-full bg-slate-700 text-slate-50 font-mono text-lg p-4 pr-12 rounded-md border-2 border-transparent focus:border-cyan-500 focus:ring-cyan-500 transition resize-none overflow-hidden"
+              className="w-full bg-slate-700 text-slate-50 font-mono text-lg p-4 pr-12 rounded-md border-2 border-transparent focus:border-cyan-500 focus:ring-cyan-500 transition resize-none overflow-hidden break-all"
               placeholder="Ваш пароль появится здесь"
               rows={1}
               style={{
                 minHeight: '56px',
                 height: 'auto',
                 lineHeight: '1.5'
-              }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = target.scrollHeight + 'px';
               }}
             />
             <button

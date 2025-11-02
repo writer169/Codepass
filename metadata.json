@@ -1,0 +1,5 @@
+{
+  "name": "Secure Password Generator",
+  "description": "A stylish and modern web application for generating cryptographically secure passwords. Features customizable length and character sets, a copy-to-clipboard function, and uses the Web Crypto API for strong randomness.",
+  "requestFramePermissions": []
+}
